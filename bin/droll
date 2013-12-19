@@ -1,0 +1,170 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'droll'
+
+help_text = {
+  :quiet    =>  'Suppress verbose output.',
+  :help     =>  'Display this help text.',
+  :syntax   =>  'Display comprehensive syntax help.',
+  :version  =>  'Display version and license information.'
+}
+
+@usage = <<EOF
+
+USAGE: #{File.basename $0} [options] [die_code]
+
+EOF
+
+syntax_help = <<EOF
+
+SYNTAX
+
+    Die codes are constructed from up to five parts:
+
+    1. Die Number (Optional; Default: 1)
+
+        An optional number that determines how many of a die should be
+        rolled.  For instance, if you wish to get the results of rolling
+        two six-sided dice, the number would be 2.
+
+    2. Roll Type (Mandatory; No Default)
+
+        A single-letter code used to specify how rolls should be treated.
+
+            d   Roll normally.
+
+            x   On a result equal to or higher than a threshold value, roll
+                another die of that type and add it to the total.
+
+            e   On a result where all dice yield values equal to or higher
+                than a threshold value, roll another die of that type and
+                add it to the total.
+
+            k   Only use the highest die values, up to a number of dice
+                equal to a threshold value.  When the threshold is not
+                specified, the default is 1.  When the "k" is capitalized "K",
+                use the lowest die values instead.
+
+            n   Count the number of dice that yield values equal to or
+                higher than a threshhold value.  When the "n" is capitalized
+                "N", count values equal to or lower than the threshhold
+                instead.
+
+    3. Die Value (Mandatory; No Default)
+
+        Indicates the set of values the die can produce.  Two types of die
+        value are supported: a normal positive integer value (a whole
+        number higher than zero), and such a value preceded by a zero.  If
+        preceded by a zero, it is treated as a die marked with a range of
+        numbers from zero to the value following the zero.  Otherwise, it
+        is treated as being marked with a range of numbers from one to the
+        indicated value.
+
+    4. Threshold (Optional; Default: Maximum Value)
+
+        A threshold may be specified for exploding roll types by attaching
+        a number, separated from the die value by a period.  Any die result
+        equal to or greater than the threshold value causes another die to
+        be rolled and added to the total.  The threshold is counted for
+        every die when using the x Roll Type, or for the sum of all dice
+        when using the e Roll Type.  It is ignored when using the d Roll
+        Type, and a warning is issued.
+
+    5. Modifier (Optional; No Default)
+
+        A plus or minus sign can be used to indicate that a value should be
+        added to, or subtracted from, the die roll total.  Following the
+        plus or minus sign, a numerical value is specified to indicate what
+        should be added or subtracted.  The modifier is applied to the roll
+        total, and not to each individual die roll.
+
+EXAMPLES
+
+    d10     Roll a single ten-sided die for values between 1 and 10.
+
+    2d3     Roll two three-sided dice for values between 1 and 3.  Add the
+            results together, for a total between 2 and 6.
+
+    3x02    Roll three three-sided dice for values between 0 and 2.  For
+            each 2 result, roll another die of the same type.  Repeat as
+            necessary, and add all values together.
+
+    3x02.1  Same as 3x02, but explodes on 1 or higher instead of only on 2.
+
+    3x02+3  Same as 3x02, but add 3 to the total.
+
+    3e02    Roll three three-sided dice for values between 0 and 2 as
+            though rolling 3d02.  If all three dice yield 2 results -- and
+            only if all three dice yield 2 results, providing a 6 total --
+            roll another three- sided die for values between 0 and 2.
+            Threat this die as 1x02, and add the exploding total to the
+            original 6 result.
+
+    3e02.4  Same as 3e02, but roll an additional 1x02 if the total of the
+            original 3d02 roll is equal to 4 or greater.
+
+    3k02    Roll three three-sided dice for values between 0 and 2 as
+            though rolling 3d02, but only keep the highest die.
+
+    3k02.2  Same as 3k02, but keep the highest two dice.
+
+    3K02.2  Same as 3k02.2, but keep the lowest two dice.
+
+    3n10    Roll three ten-sided dice for values between 1 and 10, and
+            count only the number of dice whose values are 10.
+
+    3n10.6  Same as 3n10, but count the number of dice whose values are 6
+            or higher.
+
+    3N10    Roll three ten-sided dice for values between 1 and 10, and count
+            only the number of dice whose values are 1.
+
+    3N10.5  Same as 3N10, but count the number of dice whose values are 5 or
+            lower.
+
+EOF
+
+version_help = <<EOF
+
+Droll #{Droll.version}, Copyright 2010, 2011, 2012 Chad Perrin
+This software may be distributed under the terms of the Open Works License.
+See http://owl.apotheon.org for license details.
+
+EOF
+
+verbose = true
+
+OptionParser.new do |opts|
+  opts.banner = @usage
+
+  opts.on('--quiet', '-q', help_text[:quiet]) do
+    verbose = false
+  end
+
+  opts.on('--help', '-h', help_text[:help]) do
+    puts opts
+    puts
+    exit!(0)
+  end
+
+  opts.on('--syntax', '-s', help_text[:syntax]) do
+    puts syntax_help
+    exit!(0)
+  end
+
+  opts.on_tail('--version', help_text[:version]) do
+    puts version_help
+    exit!(0)
+  end
+end.parse!
+
+if 0 < ARGV.size
+  ARGV.each do |a|
+    droll = Droll.new a
+    puts droll.roll(verbose)
+  end
+else
+  puts @usage
+  puts %Q{    Try "#{File.basename $0} --help" for usage information.}
+  puts
+end

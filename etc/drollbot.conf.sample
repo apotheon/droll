@@ -1,0 +1,8 @@
+$nickname = 'foo'
+$passwd   = 'bar'
+$ircnet   = 'irc.freenode.net'
+$portno   = 7000
+$ssl      = true
+$verbose  = true
+
+$channels = ['#botwar', '##botwar']

@@ -1,0 +1,166 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'droll'
+
+help_text = {
+  :file     =>  'Select non-default configuration file.',
+  :config   =>  'Display configuration help text.',
+  :help     =>  'Display this help text.',
+  :version  =>  'Display version and license information.'
+}
+
+@usage = <<EOF
+
+USAGE: #{File.basename $0} [options] [command]
+
+At present, there is only one command: start.  Issuing the start command
+starts the drollbot dicebot with settings according to the config file.
+
+EOF
+
+config_help = <<EOF
+
+The drollbot IRC dicebot requires a configuration file to work, because it
+needs to have certain information that cannot reasonably be defined by default.
+The default configuration file is called "drollbot.conf", and is located in the
+.config/droll directory within your user home directory.  You can see this in
+the source of the drollbot executable itself, in a line that reads:
+
+    filename = '~/.config/droll/drollbot.conf'
+
+This can be overridden by use of the -f or --file option when entering a
+drollbot command.  For instance, to use a freenode-specific config file, you
+might create a file in your home directory called "drollbot_freenode.conf" and
+explicitly use that when starting the drollbot process:
+
+    drollbot -f '~/drollbot_freenode.conf' start
+
+The configuration file, wherever you put it and whatever you call it has a
+dirty little secret.  It is actually just a Ruby file that is loaded by
+drollbot to set certain values.  Such values include:
+
+    $nickname       IRC nick
+    $passwd         IRC password
+    $ircnet         IRC network
+    $portno         port number
+    $ssl            SSL switch
+    $verbose        verbosity switch
+    $channels       list of channels
+
+For each of these, configure by using the label that starts with a dollar sign
+an equal sign, and a value.  The values must take the form of literal data
+types in Ruby -- strings, integers, true/false boolean values, and (in the case
+of the $channels lable) an array literal.  For instance:
+
+    $nickname   = 'dicebot'
+    $ircnet     = 'irc.freenode.net'
+    $portno     = 7000
+    $ssl        = true
+    $channels   = ['#botwar', '#drollbot_testing']
+
+The port number value must be an integer, a simple number with no punctuation.
+The switch values should be a bare, unpunctuated true or false word.  The
+channel list should be a comma separated list of channel names surrounded in
+quotes, enclosed in brackets -- not (parentheses) or {braces}.  Other values
+shown here are individual terms surrounded in quotes.  Whether you use single
+quotes or double quotes is generally irrelevant, but do not use "curly" quotes
+or backticks, use the same quote character on beginning and end of a value
+(including list item values), and use exactly one quote character at each end
+of a value.  To learn more about this syntax, you can learn about Ruby
+programming language data types.
+
+Of these configuration values, only three are always important: the IRC nick,
+the IRC network, and the channel list.  The necessity of using the rest of them
+depends on the specifics of what IRC network you are using, in what channels
+you want to have a dicebot, and other matters particular to your circumstances.
+
+You can find an example configuration file in the directory hierarchy where the
+gem is installed, under the "etc" subdirectory. The example configuration file
+is called "drollbot.conf.sample".  It should not be used exactly as written, as
+the nick and password values are not designed to avoid conflicting with
+settings and other users on the default network configuration in that file.
+The two default channels are used for IRC bot testing on the freenode IRC
+network, so they should be safe for purposes of playing around with your
+drollbot instance and learning its quirks.
+
+EOF
+
+version_help = <<EOF
+
+Droll and drollbot #{Droll.version}, Copyright 2010, 2011, 2012 Chad Perrin
+This software may be distributed under the terms of the Open Works License.
+See http://owl.apotheon.org for license details.
+
+EOF
+
+filename = '~/.config/droll/drollbot.conf'
+
+OptionParser.new do |opts|
+  opts.banner = @usage
+
+  opts.on('--file=FILE', '-f=FILE', help_text[:file]) do |val|
+    filename = val.chomp
+  end
+
+  opts.on('--config', '-c', help_text[:config]) do
+    puts config_help
+    exit(0)
+  end
+
+  opts.on('--help', '-h', help_text[:help]) do
+    puts opts
+    puts
+    exit(0)
+  end
+
+  opts.on_tail('--version', '-v', help_text[:version]) do
+    puts version_help
+    exit(0)
+  end
+end.parse!
+
+if ARGV[0] == 'start'
+  require 'isaac'
+  load filename
+
+  configure do |c|
+    c.nick        = $nickname
+    c.password    = $passwd
+    c.server      = $ircnet
+    c.port        = $portno
+    c.ssl         = $ssl
+    c.verbose     = $verbose
+  end
+
+  on :connect do
+    $channels.each do |chan|
+      join chan
+    end
+  end
+
+  on :channel, /^([0-9]*[dekKnNx][0-9]+(\.\d+)?[+-]?[0-9]*)\s*(.*)/ do
+    droll = Droll.new match[0]
+    result = droll.roll
+    output = "<#{nick}> rolls " + result
+
+    if match.length > 1
+      if match[-1].length > 0
+        output += " (#{match[-1]})"
+      end
+    end
+    msg channel, output
+  end
+
+  on :private, /^([0-9]*[dekKnNx][0-9]+(\.\d+)?[+-]?[0-9]*)\s*(.*)/ do
+    droll = Droll.new match[0]
+    result = droll.roll
+    output = 'result of ' + result
+
+    if match.length > 1
+      if match[-1].length > 0
+        output += " (#{match[-1]})"
+      end
+    end
+    msg nick, output
+  end
+end

@@ -58,8 +58,8 @@ Just use the gem command:
 
     $ gem install droll
 
-You can also download the gem package from the [Bitbucket project][bitbucket]
-and use the gem command to install it:
+You can also download the gem package from the [FossRec project][fossrec] and
+use the gem command to install it:
 
     $ gem install droll-<version>.gem
 
@@ -79,11 +79,11 @@ file.
 
 ### Ruby 1.8
 
-Droll assumes Ruby 1.9.x, and some die code validation (for zero-based die
-codes, e.g. 1d05) does not work properly with older Ruby versions.  Normally,
-it will not install on a system using a version of Ruby older than 1.9, but
-this can be overridden if you wish by using the `-f` option with the `gem
-install` command:
+Droll assumes Ruby 1.9.x or later, and some die code validation (for zero-based
+die codes, e.g. 1d05) does not work properly with older Ruby versions.
+Normally, it will not install on a system using a version of Ruby older than
+1.9, but this can be overridden if you wish by using the `-f` option with the
+`gem install` command:
 
     $ gem install -f droll
 
@@ -175,29 +175,6 @@ the copyfree philosophy of licensing.
 See the COPYING file in the project repository for more information about
 copyright and licensing for droll and the code associated with it.
 
-
-## contributions
-
-If you wish to contribute to the project, please feel free to do so.
-
-Mercurial (in the form of the hg tool) offers a simple way to produce a patch,
-using the `export` command.  To produce a patch based on the most recent
-commits in your local clone of the project, this command should suffice to
-produce a usable patch for an update from the immediately previous commit:
-
-    $ hg export tip
-
-* Patches may be submitted via the issue tracker, as a comment with attachment
-  in response to whatever issue it fixes.
-* Patches can also be submitted to Chad Perrin via email, using the code at
-  apotheon dot net address.
-* Another way to submit contributions is to clone the project on
-  [Bitbucket][bitbucket] and send a "pull request" from the clone when changes
-  have been made.  The process of submitting contributions via fork and pull
-  request is described in a TechRepublic article:
-  [*Contribute to Bitbucket Projects Using Forks and Pull Requests*][forkpull].
-
 [owl]: http://owl.apotheon.org
 [copyfree]: http://copyfree.org
-[bitbucket]: https://bitbucket.org/apotheon/droll/overview
-[forkpull]: http://blogs.techrepublic.com.com/programming-and-development/?p=4028
+[fossrec]: http://droll.fossrec.com

@@ -48,7 +48,7 @@ exploding occurs, leaving an 11 result from the virtual dice.  As normal, when
 all die rolling is resolved and summed, the modifier (+7 in this case) is
 applied to the total.
 
-==== Threshhold Acceptance
+==== Threshold Acceptance
 
 Using k instead of d, x, or e in the die code indicates that out of the number
 of dice rolled, only the highest of them will be kept ("k" is for "keep").
@@ -58,7 +58,7 @@ Thus, for this die code, only the highest result is kept:
 
 If the k is capitalized, the lowest result is kept instead of the highest.
 
-==== Threshhold Counting
+==== Threshold Counting
 
 In some cases, it may be desirable to count the number of dice that produce a
 result of the maximum value the die can produce.  Use n instead of d, x, e, or
@@ -67,12 +67,12 @@ k in this die code:
         3n4
 
 This will yield a result that is a count of four-sided dice that meet a
-threshhold equal to the maximum value of the die (4).  The "n" is short for
-"number", as in "the number of dice that meet or exceed the threshhold".
+threshold equal to the maximum value of the die (4).  The "n" is short for
+"number", as in "the number of dice that meet or exceed the threshold".
 
-==== Alternate Threshholds
+==== Alternate Thresholds
 
-A threshhold number may be specified by a period/fullstop character followed by
+A threshold number may be specified by a period/fullstop character followed by
 a number, with any modifiers coming after it:
 
         3x4.3+7
@@ -80,21 +80,21 @@ a number, with any modifiers coming after it:
 In this case, the die code is treated the same way as in the previous 3x4+7
 example, except that it explodes on 3 or 4, and not just on 4.
 
-For threshhold acceptance, the threshhold number is used to determine how many
+For threshold acceptance, the threshold number is used to determine how many
 of the highest or lowest die values will be kept.  In this die code, then, the
 result is the sum of the highest three die values:
 
         4k6.3
   
-In the case of threshhold counting, it would yield a result that is a count of
-four-sided dice that meet or exceed a threshhold of 3, which means a count of
+In the case of threshold counting, it would yield a result that is a count of
+four-sided dice that meet or exceed a threshold of 3, which means a count of
 all dice with values of 3 or 4, before adding the number 7 to the total with
 this die code:
 
         3n4.3+7
 
-Note that for threshhold counting, the modifier is applied to the count, and
-not to die roll values.
+Note that for threshold counting, the modifier is applied to the count, and not
+to die roll values.
 
 ==== Alternate Minimum Value
 
@@ -129,6 +129,7 @@ The above example produces output like the API usage example.
 
 
 class Droll
+  attr_reader :dcode, :dice, :dmax, :dval, :modifier, :pcode, :roll_type, :sign, :threshold
 
 =begin rdoc
 
@@ -136,55 +137,47 @@ This method returns the version number for the Droll gem.
 
 =end
 
-  def self.version; '1.0.1'; end
+  def self.version; '1.0.2'; end
 
 =begin rdoc
 
-The +dcode+ argument is any valid die code recognized by Droll.
+The +die_code+ argument is any valid die code recognized by Droll.
 
         Droll.new '4x7+3'
 
 =end
 
-  def initialize(dcode)
-    @dcode = dcode
-    @pcode = process_die
+  def initialize die_code
+    @dcode = die_code.strip
+    @allowed = Regexp.new(
+      /^[1-9]{,2}[A-Za-z]\d?[1-9]{1,2}(\.\d+)?([+-]\d+)?(\s*.+)?$/
+    )
+
+    process_die
   end
 
   private
 
   def valid?
-    if @dcode.match(
-      /^[1-9]*[0-9]*[A-Za-z][0-9]?[1-9]+[0-9]?(\.\d+)?[+-]?[0-9]*\s*(.*)$/
-    )
-      validation = true
-    else
+    validation = dcode.match @allowed
+
+    if dcode.size < 2
       validation = false
-    end
-
-    if 1 > @pcode['val'].to_i
-      return false
-    end
-    
-    if 1 > @pcode['thresh'].to_i
-      return false
-    end
-
-    if 1 > @pcode['num'].to_i
-      return false
-    end
-
-    if 0 == @pcode['val'][0].to_i
-      if 1 > @pcode['val'].to_i
-        return false
+    elsif 1 > dmax
+      validation = false
+    elsif 1 > threshold
+      validation = false
+    elsif 1 > dice
+      validation = false
+    elsif 0 == dval[0].to_i
+      if 1 > dmax
+        validation = false
       end
-    end
-
-    if 0 != @pcode['val'][0].to_i
-      if 2 > @pcode['val'].to_i
-        return false
-      elsif @pcode['type'].match(/[^Kk]/) and 2 > @pcode['thresh'].to_i
-        return false
+    elsif 0 != dval[0].to_i
+      if 2 > dmax
+        validation = false
+      elsif roll_type.match(/[^Kk]/) and 2 > threshold
+        validation = false
       end
     end
 
@@ -192,41 +185,36 @@ The +dcode+ argument is any valid die code recognized by Droll.
   end
 
   def process_die
-    d = Hash.new
-    die_roll, d['sign'], d['mod'] = @dcode.split(/([+-])/)
-    d['num'], d['type'], die_vals = die_roll.split(/([A-Za-z])/)
-    d['val'], d['thresh'] = die_vals.split(/\./)
-    d['val'] = d['val'].to_s
+    die_roll, @sign, mod = dcode.split(/([+-])/)
+    num, @roll_type, die_vals = die_roll.split(/([A-Za-z])/)
+    @dval, thresh = die_vals.to_s.split(/\./)
+    @dval = dval.to_s
+    @dmax = dval.to_i
 
-    if d['type'].match(/[KkN]/)
-      d['thresh'] ||= 1
+    if thresh
+      @threshold = thresh.to_i
     else
-      d['thresh'] ||= d['val'].sub(/^0/, '')
+      @threshold = roll_type.match(/[KkN]/) ? 1 : dmax
     end
 
-    d['num'] = 1 if d['num'] == ''
-    d['sign'] ||= '+'
-    d['mod'] ||= 0
-
-    return d
+    @dice = (num == '' ? 1 : num.to_i)
+    sign ||= '+'
+    @modifier = mod.to_i
   end
 
   def get_discrete(dval)
-    dval.match(/^0/) ? rand(dval.to_i + 1) : 1 + (rand dval.to_i)
+    dval.match(/^0/) ? rand(dmax + 1) : 1 + (rand dmax)
   end
 
-  def roll_die(die_value, die_type, die_threshhold)
+  def roll_die(die_value, die_type, die_threshold)
     discrete_rolls = [get_discrete(die_value)]
 
-    case die_type
-    when 'x'
-      c = 0
-      while c < 1000
-        if discrete_rolls[-1] >= die_threshhold.to_i
-          discrete_rolls.push get_discrete(die_value)
-          c += 1
-        else
+    if die_type == 'x'
+      0.upto(999) do
+        if discrete_rolls.last < die_threshold
           break
+        else
+          discrete_rolls.push get_discrete die_value
         end
       end
     end
@@ -234,16 +222,29 @@ The +dcode+ argument is any valid die code recognized by Droll.
     discrete_rolls.compact
   end
 
+  def analyze_rolls method, results
+    case method
+    when 'k'
+      sum_thresh_high_dice results
+    when 'K'
+      sum_thresh_low_dice results
+    when 'n'
+      count_dice_min_thresh results
+    when 'N'
+      count_dice_max_thresh results
+    end
+  end
+
   public
 
 =begin rdoc
 
 This method takes an array of numeric values as its sole argument, and compares
-it to the instantiated die code's threshhold value.  It returns an integer
-value equal to the number of values in the array argument that are equal to or
-greater than the threshhold value.
+it to the instantiated die code's threshold value.  It returns an integer value
+equal to the number of values in the array argument that are equal to or
+greater than the threshold value.
 
-Given a threshhold of 2:
+Given a threshold of 2:
 
         count_dice_min_thresh([0,1,2,3])        #=> 2
 
@@ -251,17 +252,18 @@ Given a threshhold of 2:
 
 =end
 
-  def count_dice_min_thresh(dresults)
-    num_dice_min_thresh = dresults.reject do |n|
-      n < @pcode['thresh'].to_i
-    end.size
+  def count_dice_min_thresh dresults
+    dresults.reject {|n| n < threshold }.size
   end
 
 =begin rdoc
 
-This method takes an array of numeric values as its sole argument, and compares it to the instantiated die code's threshhold value.  It returns an integer value equal to the number of values in the array argument that are equal to or greater than the threshhold value.
+This method takes an array of numeric values as its sole argument, and compares
+it to the instantiated die code's threshold value.  It returns an integer value
+equal to the number of values in the array argument that are equal to or
+greater than the threshold value.
 
-Given a thresshold of 1:
+Given a threshold of 1:
 
         count_dice_max_thresh([0,1,2,3])        #=> 2
 
@@ -269,17 +271,15 @@ Given a thresshold of 1:
 
 =end
 
-  def count_dice_max_thresh(dresults)
-    num_dice_max_thresh = dresults.reject do |n|
-      n > @pcode['thresh'].to_i
-    end.size
+  def count_dice_max_thresh dresults
+    dresults.reject {|n| n > threshold }.size
   end
 
 =begin rdoc
 
 This method takes an array of numeric values as its sole argument, and returns
 the total of the highest N values in the array, where N is the instantiated die
-code's threshhold value.
+code's threshold value.
 
 Given a die code of 3k02:
 
@@ -295,15 +295,15 @@ Given a die code of 3k02.2:
 
 =end
 
-  def sum_thresh_high_dice(dresults)
-    dresults.sort.reverse[0..(@pcode['thresh'].to_i - 1)].inject(:+)
+  def sum_thresh_high_dice dresults
+    dresults.sort.reverse[0..(threshold - 1)].inject(:+)
   end
 
 =begin rdoc
 
 This method takes an array of numeric values as its sole argument, and returns
 the total of the lowest N values in the array, where N is the instantiated die
-code's threshhold value.
+code's threshold value.
 
 Given a die code of 3K02:
 
@@ -319,13 +319,18 @@ Given a die code of 3K02.2:
 
 =end
 
-  def sum_thresh_low_dice(dresults)
-    dresults.sort[0..(@pcode['thresh'].to_i - 1)].inject(:+)
+  def sum_thresh_low_dice dresults
+    dresults.sort[0..(threshold - 1)].inject(:+)
   end
 
 =begin rdoc
 
-This method takes an array of numeric values as its sole argument, and compares the total of the values in the array to the product of the instantiated die code's threshhold value and number of dice value.  Unless that product is greater than that total, the results of a die roll of 1xX.Y are appended to the array provided in the method argument, where X is the value of the instantiated die code and Y is the threshhold of the instantiated die code.
+This method takes an array of numeric values as its sole argument, and compares
+the total of the values in the array to the product of the instantiated die
+code's threshold value and number of dice value.  Unless that product is
+greater than that total, the results of a die roll of 1xX.Y are appended to the
+array provided in the method argument, where X is the value of the instantiated
+die code and Y is the threshold of the instantiated die code.
 
 Given a die code of 2e2:
 
@@ -335,13 +340,13 @@ Given a die code of 2e2:
 
 =end
 
-  def explode_on_max_total(dresults)
-    dice_total = dresults.map {|s| s.to_i }.inject(:+)
-    unless (@pcode['thresh'].to_i * @pcode['num'].to_i) > dice_total
-      dresults.push(
-        roll_die @pcode['val'], 'x', @pcode['thresh']
-      )
+  def explode_on_max_total dresults
+    roll_total = dresults.flatten.map {|result| result.to_i }.inject(:+)
+
+    unless roll_total < (threshold * dice)
+      dresults.push(roll_die dval, 'x', threshold)
     end
+
     dresults.flatten
   end
 
@@ -359,50 +364,37 @@ an integer equal to the total result.
 
 =end
 
-  def roll(formatted=true)
-    running_totals = Array.new
+  def roll formatted=true
+    results = Array.new
 
-    return "bad die code: #{@dcode}" unless valid?
+    return "bad die code: #{dcode}" unless valid?
 
-    @pcode['num'].to_i.times do
-      running_totals.push(
-        roll_die @pcode['val'], @pcode['type'], @pcode['thresh']
-      )
-      running_totals.flatten!
+    dice.times do
+      results.push(
+        roll_die dval, roll_type, threshold
+      ).flatten!
     end
 
-    if @pcode['type'] == 'e'
-      running_totals = explode_on_max_total(running_totals)
+    if roll_type == 'e'
+      results = explode_on_max_total results
     end
 
-    if @pcode['type'] == 'k'
-        total_result = sum_thresh_high_dice running_totals
-    elsif @pcode['type'] == 'K'
-        total_result = sum_thresh_low_dice running_totals
-    elsif @pcode['type'] == 'n'
-      total_result = count_dice_min_thresh running_totals
-    elsif @pcode['type'] == 'N'
-      total_result = count_dice_max_thresh running_totals
+    total = if %w(k K n N).include? roll_type
+      analyze_rolls roll_type, results
     else # "normal" totaling
-      total_result = running_totals.map {|s| s.to_i }.inject do |sum,n|
-        sum ? sum+n : n
-      end
+      results.map {|s| s.to_i }.inject(:+)
     end
 
-    case @pcode['sign']
-    when '+'
-      total_result += @pcode['mod'].to_i
-    when '-'
-      total_result -= @pcode['mod'].to_i
+    if sign == '+'
+      total += modifier
+    elsif sign == '-'
+      total -= modifier
     end
 
     if formatted
-      result = "#{@dcode}: #{running_totals.inspect} "
-      result += "#{@pcode['sign']} #{@pcode['mod']} = "
-
-      result + total_result.to_s
+      "#{dcode}: #{results} #{sign} #{modifier} = #{total}"
     else
-      total_result
+      total
     end
   end
 end

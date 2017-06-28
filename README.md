@@ -165,16 +165,18 @@ under the `etc` subdirectory.  The example configuration file is called
 to see more information about configuring drollbot.
 
 
-## license
+## licenses
 
 Droll project files may be redistributed under the terms of the [Open Works
-License][owl].  The OWL was chosen with a conscious adherence to copyfree
-policies.  See the [Copyfree Initiative][copyfree] site for more details about
-the copyfree philosophy of licensing.
+License][owl] or the [COIL][coil], at your option; it is "dual-licensed".
+These licenses were chosen with a conscious adherence to copyfree policies.
+See the [Copyfree Initiative][copyfree] site for more details about the
+copyfree philosophy of licensing.
 
 See the COPYING file in the project repository for more information about
 copyright and licensing for droll and the code associated with it.
 
 [owl]: http://owl.apotheon.org
+[coil]: http://coil.apotheon.org
 [copyfree]: http://copyfree.org
 [fossrec]: http://droll.fossrec.com

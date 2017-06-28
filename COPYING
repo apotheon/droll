@@ -1,5 +1,6 @@
 The droll project is copyright 2010 Chad Perrin, and may be distributed under
-the terms of the Open Works License.  See the owl.txt file for license text.
+the terms of the Open Works License or the Copyfree Open Innovation License, at
+your discretion.  See the owl.txt and coil.txt files for license text.
 
 The Rubinius implementation of Ruby allows distribution under the terms of the
 MIT/X11 license.  See the [Rubinius project](http://rubini.us) for more details

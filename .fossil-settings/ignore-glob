@@ -1,0 +1,8 @@
+*.gem
+*a.out
+*.core
+*.gch
+*fossil.marks
+*git.marks
+*test_directory_name
+q

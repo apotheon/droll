@@ -124,6 +124,8 @@ if ARGV[0] == 'start'
   load filename
 
   configure do |c|
+    c.realname    = 'DrollBot'
+
     c.nick        = $nickname
     c.password    = $passwd
     c.server      = $ircnet

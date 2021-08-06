@@ -137,7 +137,7 @@ This method returns the version number for the Droll gem.
 
 =end
 
-  def self.version; '1.0.2'; end
+  def self.version; '1.0.3'; end
 
 =begin rdoc
 

@@ -1,6 +1,6 @@
 $nickname = 'foo'
 $passwd   = 'bar'
-$ircnet   = 'irc.freenode.net'
+$ircnet   = 'irc.libera.chat'
 $portno   = 7000
 $ssl      = true
 $verbose  = true

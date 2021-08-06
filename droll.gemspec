@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
   s.name            =  'droll'
   s.version         =  Droll.version
   s.authors         =  ['Chad Perrin']
-  s.date            =  '2013-01-15'
+  s.date            =  '2021-08-06'
   s.description     =  <<-EOF
     Droll is a Ruby library providing dice roller functionality, with a command
     line utility and an IRC bot as included user interfaces.  It was created
@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   s.files           =  [
     'COPYING',
     'README.md',
+    'coil.txt',
     'owl.txt',
     'lib/droll.rb',
     'bin/droll',
@@ -24,8 +25,7 @@ Gem::Specification.new do |s|
     'etc/drollbot.conf.sample'
   ]
   s.homepage        =  'http://droll.fossrec.com'
-  s.has_rdoc        =  true
-  s.license         =  'OWL'
+  s.licenses         =  ['COIL', 'OWL']
   s.bindir          =  'bin'
   s.executables     =  ['droll', 'drollbot']
 

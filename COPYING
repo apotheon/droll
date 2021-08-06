@@ -1,5 +1,5 @@
 The droll project is copyright 2010 Chad Perrin, and may be distributed under
-the terms of the Open Works License or the Copyfree Open Innovation License, at
+the terms of the Copyfree Open Innovation License or the Open Works License, at
 your discretion.  See the owl.txt and coil.txt files for license text.
 
 The MRI/YARV implementation of Ruby is distributed under the terms of the Ruby
@@ -8,4 +8,4 @@ license, which also allows distribution under the terms of the Simplified
 
 Drollbot, in addition to the standard library, requires the Isaac library.
 Isaac may be distributed under the terms of the MIT/X11 license.  See the
-[Isaac project](https://github.com/ichverstehe/isaac) for more details.
+[Isaac project](https://github.com/vangberg/isaac) for more details.
